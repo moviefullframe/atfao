@@ -4,7 +4,14 @@
         Title="Отчеты о проходах" Height="450" Width="800"
         Background="#E6F5FA">
     <Grid>
-        <DataGrid x:Name="DataGrid" Margin="10" AutoGenerateColumns="False" Background="White" BorderBrush="#66B3FF" BorderThickness="1">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Calendar Grid.Row="0" SelectedDatesChanged="Calendar_SelectedDatesChanged" />
+
+        <DataGrid x:Name="DataGrid" Grid.Row="1" Margin="10" AutoGenerateColumns="False" Background="White" BorderBrush="#66B3FF" BorderThickness="1">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="ID" Binding="{Binding ID}" Width="*" />
                 <DataGridTextColumn Header="Тип события" Binding="{Binding EventType}" Width="*" />
