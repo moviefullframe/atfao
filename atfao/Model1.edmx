@@ -1,0 +1,115 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+      <Schema Namespace="Хранилище atf_aoModel" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+        <!--Ошибки, обнаруженные при создании:
+предупреждение 6002: В таблице или представлении "atf_ao.dbo.AccessEvents" не определен первичный ключ. Ключ был выведен, а определение таблицы или представления было создано в режиме только для чтения.-->
+        <EntityType Name="AccessEvents">
+          <Key>
+            <PropertyRef Name="ID" />
+            <PropertyRef Name="EventType" />
+            <PropertyRef Name="ObjectName" />
+            <PropertyRef Name="EventDateTime" />
+            <PropertyRef Name="DirectionCode" />
+            <PropertyRef Name="AccessPointPosition" />
+            <PropertyRef Name="PassW26" />
+            <PropertyRef Name="AccessPointID" />
+          </Key>
+          <Property Name="ID" Type="int" Nullable="false" />
+          <Property Name="EventType" Type="int" Nullable="false" />
+          <Property Name="ObjectName" Type="varchar" MaxLength="255" Nullable="false" />
+          <Property Name="EventDateTime" Type="datetime" Nullable="false" />
+          <Property Name="DirectionCode" Type="int" Nullable="false" />
+          <Property Name="AccessPointPosition" Type="varchar" MaxLength="255" Nullable="false" />
+          <Property Name="PassW26" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="AccessPointID" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityContainer Name="Хранилище atf_aoModelContainer">
+          <EntitySet Name="AccessEvents" EntityType="Self.AccessEvents" store:Type="Tables" store:Schema="dbo">
+            <DefiningQuery>SELECT 
+    [AccessEvents].[ID] AS [ID], 
+    [AccessEvents].[EventType] AS [EventType], 
+    [AccessEvents].[ObjectName] AS [ObjectName], 
+    [AccessEvents].[EventDateTime] AS [EventDateTime], 
+    [AccessEvents].[DirectionCode] AS [DirectionCode], 
+    [AccessEvents].[AccessPointPosition] AS [AccessPointPosition], 
+    [AccessEvents].[PassW26] AS [PassW26], 
+    [AccessEvents].[AccessPointID] AS [AccessPointID]
+    FROM [dbo].[AccessEvents] AS [AccessEvents]</DefiningQuery>
+          </EntitySet>
+        </EntityContainer>
+      </Schema>
+    </edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema Namespace="atf_aoModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+        <EntityType Name="AccessEvents">
+          <Key>
+            <PropertyRef Name="ID" />
+            <PropertyRef Name="EventType" />
+            <PropertyRef Name="ObjectName" />
+            <PropertyRef Name="EventDateTime" />
+            <PropertyRef Name="DirectionCode" />
+            <PropertyRef Name="AccessPointPosition" />
+            <PropertyRef Name="PassW26" />
+            <PropertyRef Name="AccessPointID" />
+          </Key>
+          <Property Name="ID" Type="Int32" Nullable="false" />
+          <Property Name="EventType" Type="Int32" Nullable="false" />
+          <Property Name="ObjectName" Type="String" MaxLength="255" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="EventDateTime" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="DirectionCode" Type="Int32" Nullable="false" />
+          <Property Name="AccessPointPosition" Type="String" MaxLength="255" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="PassW26" Type="String" MaxLength="50" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="AccessPointID" Type="Int32" Nullable="false" />
+        </EntityType>
+        <EntityContainer Name="atf_aoEntities" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="AccessEvents" EntityType="Self.AccessEvents" />
+        </EntityContainer>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+        <EntityContainerMapping StorageEntityContainer="Хранилище atf_aoModelContainer" CdmEntityContainer="atf_aoEntities">
+          <EntitySetMapping Name="AccessEvents">
+            <EntityTypeMapping TypeName="atf_aoModel.AccessEvents">
+              <MappingFragment StoreEntitySet="AccessEvents">
+                <ScalarProperty Name="ID" ColumnName="ID" />
+                <ScalarProperty Name="EventType" ColumnName="EventType" />
+                <ScalarProperty Name="ObjectName" ColumnName="ObjectName" />
+                <ScalarProperty Name="EventDateTime" ColumnName="EventDateTime" />
+                <ScalarProperty Name="DirectionCode" ColumnName="DirectionCode" />
+                <ScalarProperty Name="AccessPointPosition" ColumnName="AccessPointPosition" />
+                <ScalarProperty Name="PassW26" ColumnName="PassW26" />
+                <ScalarProperty Name="AccessPointID" ColumnName="AccessPointID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </Connection>
+    <Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="false" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="true" />
+        <DesignerProperty Name="UseLegacyProvider" Value="false" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="Нет" />
+      </DesignerInfoPropertySet>
+    </Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <Diagrams></Diagrams>
+  </Designer>
+</edmx:Edmx>
