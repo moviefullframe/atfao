@@ -13,10 +13,10 @@ namespace atfao
     using System.Data.Entity;
     using System.Data.Entity.Infrastructure;
     
-    public partial class atf_aoEntities : DbContext
+    public partial class atf_aoEntities1 : DbContext
     {
-        public atf_aoEntities()
-            : base("name=atf_aoEntities")
+        public atf_aoEntities1()
+            : base("name=atf_aoEntities1")
         {
         }
     

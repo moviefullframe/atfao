@@ -1,27 +1,82 @@
 ﻿<Window x:Class="atfao.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
         Title="Отчеты о проходах" Height="450" Width="800"
-        Background="#E6F5FA">
+        Background="White">
+    <Window.Resources>
+
+        <Style x:Key="CenteredColumnHeaderStyle" TargetType="DataGridColumnHeader">
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+        </Style>
+
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#007ACC" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Height" Value="30" />
+        </Style>
+        <Style TargetType="DataGridRow">
+            <Setter Property="Height" Value="30" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Trigger.EnterActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <ColorAnimation Storyboard.TargetProperty="Background.Color" To="#DDDDDD" Duration="0:0:0.2" />
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.EnterActions>
+                    <Trigger.ExitActions>
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <ColorAnimation Storyboard.TargetProperty="Background.Color" To="White" Duration="0:0:0.2" />
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </Trigger.ExitActions>
+                </Trigger>
+            </Style.Triggers>
+            
+        </Style>
+    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10">
+            <DatePicker x:Name="DatePicker" />
+            <Button Content="Загрузить данные" Margin="5,0,0,0" Click="LoadDataButton_Click" Background="#007ACC" Foreground="White" BorderBrush="#007ACC" />
+            <Button Content="Сформировать отчёт" Margin="5,0,0,0" Click="Report_Click" Background="#007ACC" Foreground="White" BorderBrush="#007ACC" />
+        </StackPanel>
 
-        <Calendar Grid.Row="0" SelectedDatesChanged="Calendar_SelectedDatesChanged" />
-
-        <DataGrid x:Name="DataGrid" Grid.Row="1" Margin="10" AutoGenerateColumns="False" Background="White" BorderBrush="#66B3FF" BorderThickness="1">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="ID" Binding="{Binding ID}" Width="*" />
-                <DataGridTextColumn Header="Тип события" Binding="{Binding EventType}" Width="*" />
-                <DataGridTextColumn Header="Название объекта" Binding="{Binding ObjectName}" Width="*" />
-                <DataGridTextColumn Header="Дата и время события" Binding="{Binding EventDateTime}" Width="*" />
-                <DataGridTextColumn Header="Код направления" Binding="{Binding DirectionCode}" Width="*" />
-                <DataGridTextColumn Header="Позиция точки доступа" Binding="{Binding AccessPointPosition}" Width="*" />
-                <DataGridTextColumn Header="Пропуск W26" Binding="{Binding PassW26}" Width="*" />
-                <DataGridTextColumn Header="ID точки доступа" Binding="{Binding AccessPointID}" Width="*" />
-            </DataGrid.Columns>
-        </DataGrid>
+        <controls:DataGrid x:Name="DataGrid" Grid.Row="1" Margin="10"
+    AutoGenerateColumns="False"
+    Background="White"
+    BorderBrush="#007ACC"
+    BorderThickness="2"
+    RowHeaderWidth="0"
+    CanUserResizeColumns="True"
+    CanUserSortColumns="True"
+    GridLinesVisibility="All">
+            <controls:DataGrid.Columns>
+                <controls:DataGridTextColumn Header="ID" Binding="{Binding ID}" Width="*" HeaderStyle="{StaticResource CenteredColumnHeaderStyle}">
+                    <controls:DataGridTextColumn.ElementStyle>
+                        <Style TargetType="{x:Type TextBlock}">
+                            <Setter Property="FontFamily" Value="Helvetica" />
+                            <Setter Property="TextAlignment" Value="Center" />
+                            <Setter Property="TextWrapping" Value="Wrap" />
+                        </Style>
+                    </controls:DataGridTextColumn.ElementStyle>
+                </controls:DataGridTextColumn>
+                <controls:DataGridTextColumn Header="Тип события" Binding="{Binding EventType}" Width="*" HeaderStyle="{StaticResource CenteredColumnHeaderStyle}" />
+                <controls:DataGridTextColumn Header="Название объекта" Binding="{Binding ObjectName}" Width="*" HeaderStyle="{StaticResource CenteredColumnHeaderStyle}" />
+                <controls:DataGridTextColumn Header="Дата и время события" Binding="{Binding EventDateTime, StringFormat='dd.MM.yyyy HH:mm:ss'}" Width="*" HeaderStyle="{StaticResource CenteredColumnHeaderStyle}" />
+                <controls:DataGridTextColumn Header="Код направления" Binding="{Binding DirectionCode}" Width="*" HeaderStyle="{StaticResource CenteredColumnHeaderStyle}" />
+                <controls:DataGridTextColumn Header="Позиция точки доступа" Binding="{Binding AccessPointPosition}" Width="*" HeaderStyle="{StaticResource CenteredColumnHeaderStyle}" />
+                <controls:DataGridTextColumn Header="Пропуск W26" Binding="{Binding PassW26}" Width="*" HeaderStyle="{StaticResource CenteredColumnHeaderStyle}" />
+                <controls:DataGridTextColumn Header="ID точки доступа" Binding="{Binding AccessPointID}" Width="*" HeaderStyle="{StaticResource CenteredColumnHeaderStyle}" />
+            </controls:DataGrid.Columns>
+        </controls:DataGrid>
+        
     </Grid>
 </Window>

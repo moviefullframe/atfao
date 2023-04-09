@@ -4,6 +4,9 @@
              xmlns:local="clr-namespace:atfao"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <ResourceDictionary>
+            
+            
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

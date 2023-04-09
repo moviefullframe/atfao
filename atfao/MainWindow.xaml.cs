@@ -1,82 +1,189 @@
-﻿using System;
+﻿using ClosedXML.Excel;
+using System;
 using System.Data;
 using System.Data.SqlClient;
+using System.Globalization;
 using System.Windows;
-using System.Windows.Controls;
+using Microsoft.Win32;
+using System.Linq;
 
 namespace atfao
 {
     public partial class MainWindow : Window
     {
-        private string connectionString = new atf_aoEntities().Database.Connection.ConnectionString;
+        private string connectionString = new atf_aoEntities1().Database.Connection.ConnectionString;
         private DataTable dataTable = new DataTable();
 
         public MainWindow()
         {
             InitializeComponent();
 
-            // Загружаем данные по умолчанию
-            LoadData(DateTime.Today);
+
         }
 
-        private void LoadData(DateTime date)
+        private void LoadData(string date)
         {
-            // Создаем SQL-запрос для получения данных за выбранную дату
-            string sql = "SELECT [ID], [EventType], [ObjectName], [EventDateTime], [DirectionCode], [AccessPointPosition], [PassW26], [AccessPointID] FROM [AccessEvents] WHERE [EventDateTime] BETWEEN @startDate AND @endDate";
-
-            using (SqlConnection connection = new SqlConnection(connectionString))
-            {
-                // Создаем объект команды для выполнения запроса
-                SqlCommand command = new SqlCommand(sql, connection);
-
-                // Добавляем параметры для запроса
-                command.Parameters.AddWithValue("@startDate", date.Date);
-                command.Parameters.AddWithValue("@endDate", date.AddDays(1).Date);
-
-                try
-                {
-                    // Открываем соединение и выполняем запрос
-                    connection.Open();
-                    SqlDataReader reader = command.ExecuteReader();
-
-                    // Заполняем DataTable данными из результата запроса
-                    dataTable.Clear();
-                    dataTable.Load(reader);
-
-                    // Устанавливаем источник данных для DataGrid
-                    DataGrid.ItemsSource = dataTable.DefaultView;
-
-                    // Закрываем ридер и соединение
-                    reader.Close();
-                    connection.Close();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                }
-            }
+            DatabaseManager dbManager = new DatabaseManager(connectionString);
+            dataTable = dbManager.LoadData(date);
+            Console.WriteLine($"Loaded {dataTable.Rows.Count} rows from the database");
+            DataGrid.ItemsSource = dataTable.DefaultView;
         }
 
-        private void Calendar_SelectedDatesChanged(object sender, SelectionChangedEventArgs e)
+        private void LoadDataButton_Click(object sender, RoutedEventArgs e)
         {
-            var selectedDate = (sender as Calendar).SelectedDate;
+            var selectedDate = DatePicker.SelectedDate;
             if (selectedDate.HasValue)
             {
-                var selectedDateString = selectedDate.Value.ToString("yyyy-MM-dd");
-                var query = $"SELECT * FROM [atf_ao].[dbo].[AccessEvents] WHERE CONVERT(DATE, [EventDateTime]) = '{selectedDateString}'";
-                var dataTable = new DataTable();
-
-                using (var connection = new SqlConnection(connectionString))
-                {
-                    var adapter = new SqlDataAdapter(query, connection);
-
-
-                    adapter.Fill(dataTable);
-                }
-
-                DataGrid.ItemsSource = dataTable.DefaultView;
+                string formattedDate = selectedDate.Value.ToString("dd.MM.yyyy");
+                LoadData(formattedDate);
             }
         }
 
+        private void Report_Click(object sender, RoutedEventArgs e)
+        {
+            TimeSpan workStartTime = new TimeSpan(9, 0, 0);
+            var reportData = new DataTable();
+            reportData.Columns.Add("ID");
+            reportData.Columns.Add("Cтатус");
+            reportData.Columns.Add("Потери");
+
+            foreach (DataRow row in dataTable.Rows)
+            {
+                if (!DateTime.TryParseExact(row["EventDateTime"].ToString(), "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime eventDate))
+                {
+                    MessageBox.Show($"Invalid date format for row with ID {row["ID"]}. Skipping this row.");
+                    continue;
+                }
+
+                if (row["Time"] == DBNull.Value)
+                {
+                    MessageBox.Show($"Time is not provided for row with ID {row["ID"]}. Skipping this row.");
+                    continue;
+                }
+
+                TimeSpan arrivalTime;
+                if (!TimeSpan.TryParse(row["Time"].ToString(), out arrivalTime))
+                {
+                    MessageBox.Show($"Invalid time format for row with ID {row["ID"]}. Skipping this row.");
+                    continue;
+                }
+
+                if (arrivalTime > workStartTime)
+                {
+                    TimeSpan lateDuration = arrivalTime - workStartTime;
+                    reportData.Rows.Add(row["ID"], "Опоздание", lateDuration);
+                }
+                else
+                {
+                    reportData.Rows.Add(row["ID"], "Нет опоздания", TimeSpan.Zero);
+                }
+            }
+
+            // Generate the Excel report with header, graphs, and tardiness system based on the reportData DataTable
+            // Генерация Excel-отчета с заголовком, графиками и системой опозданий на основе DataTable reportData
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("Report");
+
+                // Задаем стиль для заголовка "Отчеты о проходах"
+                var titleStyle = worksheet.Style;
+                titleStyle.Font.FontName = "Helvetica";
+                titleStyle.Font.FontSize = 20;
+                titleStyle.Font.Bold = true;
+                titleStyle.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                titleStyle.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+
+                // Выводим заголовок "Отчеты о проходах" на ячейку A1 и объединяем ячейки с A1 по G1
+                worksheet.Cell("A1").Value = "Отчеты о проходах";
+                worksheet.Range("A1:G1").Merge();
+                worksheet.Cell("A1").Style = titleStyle;
+
+                // Задаем стиль для названия организации "АО Архангельский траловый флот"
+                var orgNameStyle = worksheet.Style;
+                orgNameStyle.Font.FontName = "Helvetica";
+                orgNameStyle.Font.FontSize = 16;
+                orgNameStyle.Font.Bold = true;
+                orgNameStyle.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                // Выводим название организации на ячейку A2 и объединяем ячейки с A2 по G2
+                worksheet.Cell("A2").Value = "АО Архангельский Траловый Флот";
+                worksheet.Range("A2:G2").Merge();
+                worksheet.Cell("A2").Style = orgNameStyle;
+
+                // Выводим названия столбцов DataTable reportData на строку 4
+                var columnHeaders = reportData.Columns.Cast<DataColumn>().ToList();
+                for (int i = 0; i < columnHeaders.Count; i++)
+                {
+                    worksheet.Cell(4, i + 1).Value = columnHeaders[i].ColumnName;
+                    worksheet.Cell(4, i + 1).Style.Font.FontName = "Helvetica";
+                    worksheet.Cell(4, i + 1).Style.Font.Bold = true;
+                    worksheet.Cell(4, i + 1).Style.Fill.BackgroundColor = XLColor.LightSkyBlue;
+                    worksheet.Cell(4, i + 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    worksheet.Cell(4, i + 1).Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                }
+
+                // Задаем стиль для ячеек таблицы
+                worksheet.Cell("A4").InsertTable(reportData).Theme = XLTableTheme.TableStyleMedium2;
+                
+                var tableStyle = worksheet.Table("Table1").Style;
+                tableStyle.Font.FontName = "Helvetica";
+                tableStyle.Font.FontSize = 10;
+                tableStyle.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                tableStyle.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+                       
+                            // Выводим данные DataTable reportData на ячейки таблицы
+                            for (int i = 0; i < reportData.Rows.Count; i++)
+                            {
+                                var currentRow = reportData.Rows[i];
+
+                                // Добавляем ячейки для каждого столбца DataTable reportData
+                                for (int j = 0; j < reportData.Columns.Count; j++)
+                                {
+                                    var currentCell = worksheet.Cell(i + 5, j + 1);
+
+                                    if (currentRow[j] is TimeSpan timeSpanValue)
+                                    {
+                                        // Если значение типа TimeSpan, выводим его в формате чч:мм:сс
+                                        currentCell.Value = timeSpanValue.ToString(@"hh\:mm\:ss");
+                                    }
+                                    else
+                                    {
+                                        // Иначе выводим значение строки
+                                        currentCell.Value = Convert.ToString(currentRow[j]);
+                                    }
+
+                                    // Задаем стиль ячеек
+                                    currentCell.Style.Font.FontName = "Helvetica";
+                                    currentCell.Style.Font.FontSize = 10;
+                                    currentCell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                                    currentCell.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+
+                                    // Выделяем время опоздания светло-голубым цветом
+                                    if (reportData.Columns[j].ColumnName == "Потери")
+                                    {
+                                        currentCell.Style.Fill.BackgroundColor = XLColor.LightSkyBlue;
+                                    }
+                                }
+                                // Автоматически подбираем ширину столбцов
+                                worksheet.Columns().AdjustToContents();
+
+                                // Сохраняем Excel-отчет
+                                SaveFileDialog saveFileDialog = new SaveFileDialog();
+                                saveFileDialog.Filter = "Excel files (.xlsx)|.xlsx";
+                                saveFileDialog.DefaultExt = "xlsx";
+                                saveFileDialog.FileName = "TardinessReport.xlsx";
+                                bool? result = saveFileDialog.ShowDialog();
+                                if (result == true)
+                                {
+                                    string fileName = saveFileDialog.FileName;
+                                    workbook.SaveAs(fileName);
+                                    MessageBox.Show($"Excel-отчет сохранен в {fileName}");
+                                }
+
+                                MessageBox.Show("Excel-отчет успешно создан.");
+                            }
+            }
+        }
     }
-}
+ }
+        
