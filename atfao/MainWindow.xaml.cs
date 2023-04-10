@@ -6,18 +6,20 @@ using System.Globalization;
 using System.Windows;
 using Microsoft.Win32;
 using System.Linq;
+using System.Windows.Controls;
 
 namespace atfao
 {
     public partial class MainWindow : Window
     {
+        private bool isLunchTime = false;
+
         private string connectionString = new atf_aoEntities1().Database.Connection.ConnectionString;
         private DataTable dataTable = new DataTable();
 
         public MainWindow()
         {
             InitializeComponent();
-
 
         }
 
@@ -39,47 +41,53 @@ namespace atfao
             }
         }
 
+
         private void Report_Click(object sender, RoutedEventArgs e)
         {
             TimeSpan workStartTime = new TimeSpan(9, 0, 0);
             var reportData = new DataTable();
-            reportData.Columns.Add("ID");
-            reportData.Columns.Add("Cтатус");
-            reportData.Columns.Add("Потери");
+            reportData.Columns.AddRange(new[] { new DataColumn("ID"), new DataColumn("Cтатус"), new DataColumn("Потери", typeof(TimeSpan)) });
+
+            TimeSpan totalLunchTime = TimeSpan.Zero;
 
             foreach (DataRow row in dataTable.Rows)
             {
+                TimeSpan lunchTime = TimeSpan.Zero;
                 if (!DateTime.TryParseExact(row["EventDateTime"].ToString(), "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime eventDate))
                 {
-                    MessageBox.Show($"Invalid date format for row with ID {row["ID"]}. Skipping this row.");
+                    MessageBox.Show($"Некорректный формат даты для строки с ID {row["ID"]}. Пропускаем эту строку.");
                     continue;
                 }
 
                 if (row["Time"] == DBNull.Value)
                 {
-                    MessageBox.Show($"Time is not provided for row with ID {row["ID"]}. Skipping this row.");
+                    MessageBox.Show($"Время не указано для строки с ID {row["ID"]}. Пропускаем эту строку.");
                     continue;
                 }
 
-                TimeSpan arrivalTime;
-                if (!TimeSpan.TryParse(row["Time"].ToString(), out arrivalTime))
+                if (!TimeSpan.TryParse(row["Time"].ToString(), out TimeSpan arrivalTime))
                 {
-                    MessageBox.Show($"Invalid time format for row with ID {row["ID"]}. Skipping this row.");
+                    MessageBox.Show($"Некорректный формат времени для строки с ID {row["ID"]}. Пропускаем эту строку.");
+
                     continue;
                 }
 
-                if (arrivalTime > workStartTime)
+                if (arrivalTime >= new TimeSpan(13, 0, 0) && arrivalTime < new TimeSpan(14, 0, 0))
                 {
-                    TimeSpan lateDuration = arrivalTime - workStartTime;
-                    reportData.Rows.Add(row["ID"], "Опоздание", lateDuration);
+                    continue;
                 }
-                else
+
+                TimeSpan lateTime = arrivalTime > workStartTime ? arrivalTime - workStartTime : TimeSpan.Zero;
+                if (isLunchTime && arrivalTime >= new TimeSpan(14, 0, 0))
                 {
-                    reportData.Rows.Add(row["ID"], "Нет опоздания", TimeSpan.Zero);
+                    lateTime -= new TimeSpan(1, 0, 0);
                 }
+
+
+                reportData.Rows.Add(row["ID"], lateTime > TimeSpan.Zero ? "Опоздание" : "Нет опоздания", lateTime);
             }
 
-            // Generate the Excel report with header, graphs, and tardiness system based on the reportData DataTable
+
             // Генерация Excel-отчета с заголовком, графиками и системой опозданий на основе DataTable reportData
             using (var workbook = new XLWorkbook())
             {
@@ -168,22 +176,34 @@ namespace atfao
                                 worksheet.Columns().AdjustToContents();
 
                                 // Сохраняем Excel-отчет
-                                SaveFileDialog saveFileDialog = new SaveFileDialog();
-                                saveFileDialog.Filter = "Excel files (.xlsx)|.xlsx";
-                                saveFileDialog.DefaultExt = "xlsx";
-                                saveFileDialog.FileName = "TardinessReport.xlsx";
-                                bool? result = saveFileDialog.ShowDialog();
-                                if (result == true)
-                                {
-                                    string fileName = saveFileDialog.FileName;
-                                    workbook.SaveAs(fileName);
-                                    MessageBox.Show($"Excel-отчет сохранен в {fileName}");
-                                }
-
-                                MessageBox.Show("Excel-отчет успешно создан.");
+                                
                             }
+
+
+                SaveFileDialog saveFileDialog = new SaveFileDialog();
+                saveFileDialog.Filter = "Excel files (.xlsx)|.xlsx";
+                saveFileDialog.DefaultExt = "xlsx";
+                saveFileDialog.FileName = "TardinessReport.xlsx";
+                bool? result = saveFileDialog.ShowDialog();
+                if (result == true)
+                {
+                    string fileName = saveFileDialog.FileName;
+                    workbook.SaveAs(fileName);
+                    MessageBox.Show($"Excel-отчет сохранен в {fileName}");
+                }
+
+                MessageBox.Show("Excel-отчет успешно создан.");
+
+
+
             }
+        }
+        
+        private void CheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            isLunchTime = ((CheckBox)sender).IsChecked ?? false;
+            LoadData(DatePicker.SelectedDate?.ToString("dd.MM.yyyy"));
         }
     }
  }
-        
+       
